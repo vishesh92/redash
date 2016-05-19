@@ -19,7 +19,6 @@
             scope.link += '#' + scope.visualization.id;
           }
         }
-        // element.find('a').attr('href', link);
       }
     }
   }

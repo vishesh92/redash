@@ -5,8 +5,6 @@
     var DEFAULT_TAB = 'table';
 
     var getQueryResult = function(maxAge) {
-      // Collect params, and getQueryResult with params; getQueryResult merges it into the query
-      var parameters = Query.collectParamsFromQueryString($location, $scope.query);
       if (maxAge === undefined) {
         maxAge = $location.search()['maxAge'];
       }
@@ -16,7 +14,7 @@
       }
 
       $scope.showLog = false;
-      $scope.queryResult = $scope.query.getQueryResult(maxAge, parameters);
+      $scope.queryResult = $scope.query.getQueryResult(maxAge);
     };
 
     var getDataSourceId = function() {

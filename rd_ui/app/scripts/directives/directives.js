@@ -415,4 +415,25 @@
     }
   }]);
 
+  directives.directive('parameters', ['$location', function($location) {
+    return {
+      restrict: 'E',
+      transclude: true,
+      scope: {
+        'parameters': '='
+      },
+      templateUrl: '/views/directives/parameters.html',
+      link: function(scope, elem, attrs) {
+        // is this the correct location for this logic?
+        scope.$watch('parameters', function() {
+          _.each(scope.parameters, function(param) {
+            if (param.value !== null || param.value !== '') {
+              $location.search('p_' + param.name, param.value);
+            }
+          })
+        }, true);
+      }
+    }
+  }]);
+
 })();

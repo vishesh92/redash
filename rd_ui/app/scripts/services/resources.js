@@ -415,7 +415,7 @@
     return QueryResult;
   };
 
-  var Query = function ($resource, QueryResult, DataSource) {
+  var Query = function ($resource, $http, $location, QueryResult, DataSource) {
     var Query = $resource('api/queries/:id', {id: '@id'},
       {
         search: {
@@ -427,7 +427,8 @@
           method: 'get',
           isArray: true,
           url: "api/queries/recent"
-        }});
+        }
+      });
 
     Query.newQuery = function () {
       return new Query({
@@ -436,21 +437,6 @@
         schedule: null,
         user: currentUser
       });
-    };
-
-    Query.collectParamsFromQueryString = function($location, query) {
-      var parameterNames = query.getParameters();
-      var parameters = {};
-
-      var queryString = $location.search();
-      _.each(parameterNames, function(param, i) {
-        var qsName = "p_" + param;
-        if (qsName in queryString) {
-          parameters[param] = queryString[qsName];
-        }
-      });
-
-      return parameters;
     };
 
     Query.prototype.getSourceLink = function () {
@@ -475,22 +461,19 @@
     };
 
     Query.prototype.paramsRequired = function() {
-      var queryParameters = this.getParameters();
-      return !_.isEmpty(queryParameters);
+      return this.getParametersDefs().isRequired();
     };
 
-    Query.prototype.getQueryResult = function (maxAge, parameters) {
+    Query.prototype.getQueryResult = function (maxAge) {
       if (!this.query) {
         return;
       }
       var queryText = this.query;
 
-      var queryParameters = this.getParameters();
-      var paramsRequired = !_.isEmpty(queryParameters);
+      var parameters = this.getParameters();
+      var missingParams = parameters.getMissing();
 
-      var missingParams = parameters === undefined ? queryParameters : _.difference(queryParameters, _.keys(parameters));
-
-      if (paramsRequired && missingParams.length > 0) {
+      if (missingParams.length > 0) {
         var paramsWord = "parameter";
         if (missingParams.length > 1) {
           paramsWord = "parameters";
@@ -499,8 +482,8 @@
         return new QueryResult({job: {error: "Missing values for " + missingParams.join(', ')  + " "+paramsWord+".", status: 4}});
       }
 
-      if (paramsRequired) {
-        queryText = Mustache.render(queryText, parameters);
+      if (parameters.isRequired()) {
+        queryText = Mustache.render(queryText, parameters.getValues());
 
         // Need to clear latest results, to make sure we don't use results for different params.
         this.latest_query_data = null;
@@ -528,30 +511,98 @@
       return this.getQueryResult().toPromise();
     };
 
-    Query.prototype.getParameters = function() {
-      var parts = Mustache.parse(this.query);
-      var parameters = [];
-      var collectParams = function(parts) {
-        parameters = [];
-        _.each(parts, function(part) {
-          if (part[0] == 'name' || part[0] == '&') {
-            parameters.push(part[1]);
-          } else if (part[0] == '#') {
-            parameters = _.union(parameters, collectParams(part[4]));
+
+    var Parameters = function(query) {
+      this.query = query;
+
+      this.parseQuery = function() {
+        var parts = Mustache.parse(this.query.query);
+        var parameters = [];
+        var collectParams = function(parts) {
+          parameters = [];
+          _.each(parts, function(part) {
+            if (part[0] == 'name' || part[0] == '&') {
+              parameters.push(part[1]);
+            } else if (part[0] == '#') {
+              parameters = _.union(parameters, collectParams(part[4]));
+            }
+          });
+          return parameters;
+        };
+
+        parameters = collectParams(parts);
+
+        return parameters;
+      }
+
+      this.updateParameters = function() {
+        if (this.query.query === this.cachedQueryText) {
+          return;
+        }
+
+        this.cachedQueryText = this.query.query;
+        var parameters = this.parseQuery();
+
+        this.paramDefs = this.paramDefs || {};
+        _.each(parameters, function(param) {
+          if (!_.has(this.paramDefs, param)) {
+            this.paramDefs[param] = {
+              'title': param,
+              'name': param,
+              'value': null
+            }
+          }
+        }.bind(this));
+
+        this.paramDefs = _.pick(this.paramDefs, parameters);
+      }
+
+      this.initFromQueryString = function() {
+        var queryString = $location.search();
+        _.each(this.paramDefs, function(param) {
+          var queryStringName = 'p_' + param.name;
+          if (_.has(queryString, queryStringName)) {
+            param.value = queryString[queryStringName];
           }
         });
-        return parameters;
-      };
+      }
 
-      parameters = collectParams(parts);
+      this.updateParameters();
+      this.initFromQueryString();
+    }
 
-      return parameters;
+    Parameters.prototype.get = function() {
+      this.updateParameters();
+      return this.paramDefs;
+    };
+
+    Parameters.prototype.getMissing = function() {
+      return _.pluck(_.filter(this.get(), function(p) { return p.value === null || p.value === ''; }), 'title');
+    }
+
+    Parameters.prototype.isRequired = function() {
+      return !_.isEmpty(this.get());
+    }
+
+    Parameters.prototype.getValues = function() {
+      var params = this.get();
+      return _.object(_.keys(params), _.pluck(params, 'value'));
+    }
+
+    Query.prototype.getParameters = function() {
+      if (!this.parameters) {
+        this.parameters = new Parameters(this);
+      }
+
+      return this.parameters;
+    }
+
+    Query.prototype.getParametersDefs = function() {
+      return this.getParameters().get();
     }
 
     return Query;
   };
-
-
 
   var DataSource = function ($resource) {
     var actions = {
@@ -652,7 +703,7 @@
 
   angular.module('redash.services')
       .factory('QueryResult', ['$resource', '$timeout', '$q', QueryResult])
-      .factory('Query', ['$resource', 'QueryResult', 'DataSource', Query])
+      .factory('Query', ['$resource', '$http', '$location', 'QueryResult', 'DataSource', Query])
       .factory('DataSource', ['$resource', DataSource])
       .factory('Alert', ['$resource', '$http', Alert])
       .factory('AlertSubscription', ['$resource', AlertSubscription])
