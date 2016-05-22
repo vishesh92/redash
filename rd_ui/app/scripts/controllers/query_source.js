@@ -22,7 +22,6 @@
     $scope.base_url = $location.protocol()+"://"+$location.host()+":"+$location.port();
 
     $scope.newVisualization = undefined;
-    $scope.params = $scope.query.getParametersDefs();
 
     // @override
     Object.defineProperty($scope, 'showDataset', {

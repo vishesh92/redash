@@ -415,7 +415,7 @@
     return QueryResult;
   };
 
-  var Query = function ($resource, $http, $location, QueryResult, DataSource) {
+  var Query = function ($resource, $location, QueryResult) {
     var Query = $resource('api/queries/:id', {id: '@id'},
       {
         search: {
@@ -703,7 +703,7 @@
 
   angular.module('redash.services')
       .factory('QueryResult', ['$resource', '$timeout', '$q', QueryResult])
-      .factory('Query', ['$resource', '$http', '$location', 'QueryResult', 'DataSource', Query])
+      .factory('Query', ['$resource', '$location', 'QueryResult', Query])
       .factory('DataSource', ['$resource', DataSource])
       .factory('Alert', ['$resource', '$http', Alert])
       .factory('AlertSubscription', ['$resource', AlertSubscription])
