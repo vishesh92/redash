@@ -256,9 +256,9 @@
             <div class="row">
               <div class="col-lg-12">
                 <ul class="tab-nav">
-                  <rd-tab tab-id="table" name="Table"></rd-tab>
-                  <rd-tab tab-id="pivot" name="Pivot Table" ng-if="sourceMode && canEdit"></rd-tab>
-                  <rd-tab tab-id="{{vis.id}}" name="{{vis.name}}" ng-if="vis.type!='TABLE'"
+                  <rd-tab tab-id="table" name="Table" base-path="query.getUrl(sourceMode)"></rd-tab>
+                  <rd-tab tab-id="pivot" name="Pivot Table" base-path="query.getUrl(sourceMode)" ng-if="sourceMode && canEdit"></rd-tab>
+                  <rd-tab tab-id="{{vis.id}}" name="{{vis.name}}" ng-if="vis.type!='TABLE'" base-path="query.getUrl(sourceMode)"
                           ng-repeat="vis in query.visualizations">
                           <span class="remove" ng-click="deleteVisualization($event, vis)"
                                 ng-show="canEdit"> &times;</span>

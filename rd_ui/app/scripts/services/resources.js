@@ -507,6 +507,39 @@
       return this.queryResult;
     };
 
+    Query.prototype.getUrl = function(source, hash) {
+      var url = "queries/" + this.id;
+
+      if (source) {
+        url += '/source';
+      }
+
+      var params = "";
+      if (this.getParameters().isRequired()) {
+        _.each(this.getParameters().getValues(), function(value, name) {
+          if (value === null) {
+            return;
+          }
+
+          if (params !== "") {
+            params += "&";
+          }
+
+          params += 'p_' + encodeURIComponent(name) + "=" + encodeURIComponent(value);
+        });
+      }
+
+      if (params !== "") {
+        url += "?" + params;
+      }
+
+      if (hash) {
+        url += "#" + hash;
+      }
+
+      return url;
+    }
+
     Query.prototype.getQueryResultPromise = function() {
       return this.getQueryResult().toPromise();
     };
