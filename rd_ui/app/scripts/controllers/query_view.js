@@ -125,16 +125,13 @@
       if (data) {
         data.id = $scope.query.id;
       } else {
-        data = _.clone($scope.query);
+        data = _.pick($scope.query, ["schedule", "query", "id", "description", "name", "data_source_id", "options"]);
       }
 
       options = _.extend({}, {
         successMessage: 'Query saved',
         errorMessage: 'Query could not be saved'
       }, options);
-
-      delete data.latest_query_data;
-      delete data.queryResult;
 
       return Query.save(data, function() {
         growl.addSuccessMessage(options.successMessage);

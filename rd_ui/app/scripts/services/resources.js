@@ -435,7 +435,8 @@
         query: "",
         name: "New Query",
         schedule: null,
-        user: currentUser
+        user: currentUser,
+        options: {}
       });
     };
 
@@ -576,10 +577,10 @@
         this.cachedQueryText = this.query.query;
         var parameters = this.parseQuery();
 
-        this.paramDefs = this.paramDefs || {};
+        this.query.options.parameters = this.query.options.parameters || {};
         _.each(parameters, function(param) {
-          if (!_.has(this.paramDefs, param)) {
-            this.paramDefs[param] = {
+          if (!_.has(this.query.options.parameters, param)) {
+            this.query.options.parameters[param] = {
               'title': param,
               'name': param,
               'value': null
@@ -587,12 +588,12 @@
           }
         }.bind(this));
 
-        this.paramDefs = _.pick(this.paramDefs, parameters);
+        this.query.options.parameters = _.pick(this.query.options.parameters, parameters);
       }
 
       this.initFromQueryString = function() {
         var queryString = $location.search();
-        _.each(this.paramDefs, function(param) {
+        _.each(this.get(), function(param) {
           var queryStringName = 'p_' + param.name;
           if (_.has(queryString, queryStringName)) {
             param.value = queryString[queryStringName];
@@ -606,7 +607,7 @@
 
     Parameters.prototype.get = function() {
       this.updateParameters();
-      return this.paramDefs;
+      return this.query.options.parameters;
     };
 
     Parameters.prototype.getMissing = function() {
@@ -623,11 +624,11 @@
     }
 
     Query.prototype.getParameters = function() {
-      if (!this.parameters) {
-        this.parameters = new Parameters(this);
+      if (!this.$parameters) {
+        this.$parameters = new Parameters(this);
       }
 
-      return this.parameters;
+      return this.$parameters;
     }
 
     Query.prototype.getParametersDefs = function() {
