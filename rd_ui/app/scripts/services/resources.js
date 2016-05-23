@@ -583,6 +583,7 @@
             this.query.options.parameters[param] = {
               'title': param,
               'name': param,
+              'type': 'text',
               'value': null
             }
           }

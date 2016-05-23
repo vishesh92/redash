@@ -416,23 +416,40 @@
     }
   }]);
 
-  directives.directive('parameters', ['$location', function($location) {
+  directives.directive('parameters', ['$location', '$modal', function($location, $modal) {
     return {
       restrict: 'E',
       transclude: true,
       scope: {
-        'parameters': '='
+        'parameters': '=',
+        'syncValues': '=?',
+        'editable': '=?'
       },
       templateUrl: '/views/directives/parameters.html',
       link: function(scope, elem, attrs) {
         // is this the correct location for this logic?
-        scope.$watch('parameters', function() {
-          _.each(scope.parameters, function(param) {
-            if (param.value !== null || param.value !== '') {
-              $location.search('p_' + param.name, param.value);
-            }
+        if (scope.syncValues !== false) {
+          scope.$watch('parameters', function() {
+            _.each(scope.parameters, function(param) {
+              if (param.value !== null || param.value !== '') {
+                $location.search('p_' + param.name, param.value);
+              }
+            })
+          }, true);
+        }
+
+        scope.showParameterSettings = function(param) {
+          console.log('Settings for:', param);
+          $modal.open({
+            templateUrl: '/views/dialogs/parameter_settings.html',
+            controller: ['$scope', '$modalInstance', function($scope, $modalInstance) {
+              $scope.close = function() {
+                $modalInstance.close();
+              };
+              $scope.parameter = param;
+            }]
           })
-        }, true);
+        }
       }
     }
   }]);
