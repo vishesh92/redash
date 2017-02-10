@@ -28,6 +28,9 @@
         <button class="btn btn-default" ng-click="sendPasswordReset()" ng-disabled="disablePasswordResetButton">Send
           Password Reset Email
         </button>
+        <button class="btn btn-default" ng-click="updateUser(user, false)">
+          Delete User
+        </button>
       </div>
 
       <div ng-if="passwordResetLink" class="alert alert-success">

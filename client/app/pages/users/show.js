@@ -74,7 +74,7 @@ function UserCtrl($scope, $routeParams, $http, $location, toastr,
     });
   };
 
-  $scope.updateUser = (form) => {
+  $scope.updateUser = (form, status = true) => {
     if (!form.$valid) {
       return;
     }
@@ -83,6 +83,7 @@ function UserCtrl($scope, $routeParams, $http, $location, toastr,
       id: $scope.user.id,
       name: $scope.user.name,
       email: $scope.user.email,
+      is_active: status,
     };
 
     User.save(data, (user) => {
